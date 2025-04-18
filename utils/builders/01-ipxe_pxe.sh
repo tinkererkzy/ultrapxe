@@ -112,7 +112,7 @@ rm $BASE_DIR/loaders/*.*
 set -e
 cp bin-x86_64-efi/snponly.efi "$BASE_DIR/loaders/ipxe64.efi"
 cp bin-i386-efi/snponly.efi "$BASE_DIR/loaders/ipxe32.efi"
-cp bin/undionly.kpxe "$BASE_DIR/bootloaders/ipxe.undi"
+cp bin/undionly.kpxe "$BASE_DIR/loaders/ipxe.undi"
 
 # Done just clear the build directory
 rm -rf "$CLONE_DIR/ipxe"
