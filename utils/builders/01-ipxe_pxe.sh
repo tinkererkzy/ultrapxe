@@ -107,7 +107,9 @@ make "-j$(nproc)" bin-x86_64-efi/snponly.efi CONFIG=ultrasrv-pxe
 make "-j$(nproc)" bin-i386-efi/snponly.efi CONFIG=ultrasrv-pxe
 make "-j$(nproc)" bin/undionly.kpxe CONFIG=ultrasrv-pxe
 # Step 3.5: Copy the ipxe bootloader to the output directory
+set +e
 rm $BASE_DIR/loaders/*.*
+set -e
 cp bin-x86_64-efi/snponly.efi "$BASE_DIR/loaders/ipxe64.efi"
 cp bin-i386-efi/snponly.efi "$BASE_DIR/loaders/ipxe32.efi"
 cp bin/undionly.kpxe "$BASE_DIR/bootloaders/ipxe.undi"
