@@ -28,4 +28,3 @@ This repository contains the configuration and scripts for setting up a PXE boot
    setup-env.sh
    Note: Make sure you are in the `utils` folder
 4. chmod the OS build scripts that you want to make available
-5. run ./utils/build-all.sh
