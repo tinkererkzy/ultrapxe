@@ -1,7 +1,7 @@
 #!/bin/bash
 #Builds the ipxe pxe bootloader binaries
 #Set so that if any command returns a non zero exit code return
-set -e
+set -euo pipefail
 
 #Variables (User Adjustable)
 

@@ -1,7 +1,13 @@
 #!/bin/bash
-#This script Downloads Arch Linux and installs it 
-set -e
+#This script preps the Archlinux ISO for netbooting
+set -euo pipefail
 #Variables (User Adjustable)
+
+# Check if xorriso is installed
+if ! command -v xorriso &> /dev/null; then
+    echo "Error: xorriso is not installed. Please install it using your package manager (e.g., 'sudo pacman -S xorriso' on Arch-based systems)."
+    exit 1
+fi
 
 # Load env
 CONFIG_FILE="$(dirname "$0")/../../config/env.conf"
@@ -14,28 +20,30 @@ else
 fi
 
 BOOT_DIR_IRL="$(realpath "$BASE_DIR/boot/archlinux")"
-BOOT_DIR_NFS=$NFS_BASE_PATH/boot/archlinux
+BOOT_DIR_NET=$SERVER_BASE_PATH/boot/archlinux
 TMP_PATH="$(realpath "$BASE_DIR/build/arch.iso")"
 
 
 #####################################
 # VARIABLES END HERE SO DON'T TOUCH!#
 #####################################
-# Check if the server is using HTTP
-# if yes quit
-if [ "$SERVER_PROTOCOL" != "nfs" ]; then
-    echo "This script only works with NFS"
-    echo "This script is not ready for HTTP yet"
-    exit 1
-fi
-
 # Step 1:create the image dir
-echo Downloading Archlinux
+echo Creating $BOOT_DIR_IRL
+# Check if the directory exists
+if [ ! -d "$BOOT_DIR_IRL" ]; then
+    mkdir --parents "$BOOT_DIR_IRL"
+else
+    echo "Directory $BOOT_DIR_IRL already exists. Deleting old files."
+    rm -r "$BOOT_DIR_IRL/"
+    mkdir --parents "$BOOT_DIR_IRL"
+fi
 
 # Step 2: Download the arch ISO
 echo Downloading Archlinux
-rm $TMP_PATH
-wget https://geo.mirror.pkgbuild.com/iso/latest/archlinux-x86_64.iso -O $TMP_PATH
+if [ -f "$TMP_PATH" ]; then
+    rm "$TMP_PATH"
+fi
+wget --tries=3 --timeout=30 https://geo.mirror.pkgbuild.com/iso/latest/archlinux-x86_64.iso -O $TMP_PATH
 
 # Step 3: Extract the ISO
 # First we delete the old files
@@ -44,16 +52,37 @@ if [ -d "$BASE_DIR/boot/archlinux" ]; then
     echo "Deleting existing deploy."
     rm -r "$BASE_DIR/boot/archlinux"
 fi
-mkdir --parents $BOOT_DIR_IRL/iso
+mkdir --parents "$BOOT_DIR_IRL/iso"
 xorriso -osirrox on  -indev $TMP_PATH -extract / $BOOT_DIR_IRL/iso
 chmod -R u+w $BOOT_DIR_IRL/iso
 # Step 4: Write the boot script
 echo "Setting up boot config"
-cat > $BOOT_DIR/boot.ipxe <<EOF
+BOOT_DIR=$BOOT_DIR_IRL  # Ensure BOOT_DIR is defined
+#Check if we are using NFS
+if [ "$SERVER_PROTOCOL" == "nfs" ]; then
+   cat > $BOOT_DIR/boot.ipxe <<EOF
 #!ipxe
-kernel nfs://${SERVER_IPV4}${SERVER_BASE_PATH}/iso/arch/boot/x86_64/vmlinuz-linux archiso_nfs_srv=${SERVER_IPV4}:${SERVER_BASE_PATH}/iso/ ip=dhcp
-initrd nfs://${SERVER_IPV4}${SERVER_BASE_PATH}/iso/arch/boot/x86_64/initramfs-linux.img
+kernel nfs://${SERVER_IPv4}${SERVER_BASE_PATH}/iso/arch/boot/x86_64/vmlinuz-linux archiso_nfs_srv=${SERVER_IPV4}:${SERVER_BASE_PATH}/iso/ ip=dhcp
+initrd nfs://${SERVER_IPv4}${SERVER_BASE_PATH}/iso/arch/boot/x86_64/initramfs-linux.img
 boot
 EOF
-rm $TMP_PATH
-echo Set-up Archlinux successfully
+fi
+if [ "$SERVER_PROTOCOL" == "http" ]; then
+   cat > $BOOT_DIR/boot.ipxe <<EOF
+#!ipxe
+kernel http://${SERVER_IPv4}${SERVER_BASE_PATH}/iso/arch/boot/x86_64/vmlinuz-linux archiso_http_srv=http://${SERVER_IPv4}${SERVER_BASE_PATH}/iso/ ip=dhcp
+initrd http://${SERVER_IPv4}${SERVER_BASE_PATH}/iso/arch/boot/x86_64/initramfs-linux.img
+bootecho Downloading Archlinux
+EOF
+fi
+cat > $BOOT_DIR_IRL/menu.pipxe <<EOF
+item arch Archlinux (Installer)
+goto continue-arch
+:arch
+chain ${SERVER_PROTOCOL}://${SERVER_IPv4}${SERVER_BASE_PATH}/boot/archlinux/boot.ipxe
+boot
+goto menu
+:continue-arch
+EOF
+rm "$TMP_PATH"
+echo "Arch is now ready to be netinstalled"
