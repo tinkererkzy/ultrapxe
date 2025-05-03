@@ -62,7 +62,7 @@ BOOT_DIR=$BOOT_DIR_IRL  # Ensure BOOT_DIR is defined
 if [ "$SERVER_PROTOCOL" == "nfs" ]; then
    cat > $BOOT_DIR/boot.ipxe <<EOF
 #!ipxe
-kernel nfs://${SERVER_IPv4}${SERVER_BASE_PATH}/iso/arch/boot/x86_64/vmlinuz-linux archiso_nfs_srv=${SERVER_IPV4}:${SERVER_BASE_PATH}/iso/ ip=dhcp
+kernel nfs://${SERVER_IPv4}${BOOT_DIR_NET}/iso/arch/boot/x86_64/vmlinuz-linux archiso_nfs_srv=${SERVER_IPV4}:${SERVER_BASE_PATH}/iso/ ip=dhcp
 initrd nfs://${SERVER_IPv4}${SERVER_BASE_PATH}/iso/arch/boot/x86_64/initramfs-linux.img
 boot
 EOF
@@ -70,9 +70,9 @@ fi
 if [ "$SERVER_PROTOCOL" == "http" ]; then
    cat > $BOOT_DIR/boot.ipxe <<EOF
 #!ipxe
-kernel http://${SERVER_IPv4}${SERVER_BASE_PATH}/iso/arch/boot/x86_64/vmlinuz-linux archiso_http_srv=http://${SERVER_IPv4}${SERVER_BASE_PATH}/iso/ ip=dhcp
-initrd http://${SERVER_IPv4}${SERVER_BASE_PATH}/iso/arch/boot/x86_64/initramfs-linux.img
-bootecho Downloading Archlinux
+kernel http://${SERVER_IPv4}${BOOT_DIR_NET}/iso/arch/boot/x86_64/vmlinuz-linux archiso_http_srv=http://${SERVER_IPv4}${BOOT_DIR_NET}/iso/ ip=dhcp
+initrd http://${SERVER_IPv4}${BOOT_DIR_NET}/iso/arch/boot/x86_64/initramfs-linux.img
+boot
 EOF
 fi
 cat > $BOOT_DIR_IRL/menu.pipxe <<EOF

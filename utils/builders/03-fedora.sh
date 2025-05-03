@@ -71,18 +71,18 @@ if [ $FEDORA_VERSION -lt $VALID_VERSION ]; then
 fi
 echo Downloading Fedora $FEDORA_VERSION
 # Step 3: Download the fedora boot files
-#rm -rf $BOOT_DIR_IRL
-#mkdir --parents $BOOT_DIR_IRL/
-#wget $FEDORA_REPO/$FEDORA_VERSION/Everything/x86_64/os/images/pxeboot/vmlinuz -O $BOOT_DIR_IRL/vmlinuz
-#wget $FEDORA_REPO/$FEDORA_VERSION/Everything/x86_64/os/images/pxeboot/initrd.img -O $BOOT_DIR_IRL/initrd.img
-#wget $FEDORA_REPO/$FEDORA_VERSION/Everything/x86_64/os/images/install.img -O $BOOT_DIR_IRL/stage2.img
+rm -rf $BOOT_DIR_IRL
+mkdir --parents $BOOT_DIR_IRL/
+wget $FEDORA_REPO/$FEDORA_VERSION/Everything/x86_64/os/images/pxeboot/vmlinuz -O $BOOT_DIR_IRL/vmlinuz
+wget $FEDORA_REPO/$FEDORA_VERSION/Everything/x86_64/os/images/pxeboot/initrd.img -O $BOOT_DIR_IRL/initrd.img
+wget $FEDORA_REPO/$FEDORA_VERSION/Everything/x86_64/os/images/install.img -O $BOOT_DIR_IRL/stage2.img
 # Step 4: Write the boot script
 echo "Setting up boot config"
 cat > $BOOT_DIR_IRL/boot.ipxe <<EOF
 #!ipxe
 echo Starting Fedora
-kernel ${SERVER_PROTOCOL}://${SERVER_IPv4}${SERVER_BASE_PATH}${SERVER_BASE_PATH}/vmlinuz ip=dhcp inst.stage2=${SERVER_PROTOCOL}://${SERVER_IPv4}${SERVER_BASE_PATH}${BOOT_DIR}/stage2.img loglevel=3 inst.sshd
-initrd ${SERVER_PROTOCOL}://${SERVER_IPv4}${SERVER_BASE_PATH}${SERVER_BASE_PATH}/initrd.img
+kernel ${SERVER_PROTOCOL}://${SERVER_IPv4}${SERVER_BASE_PATH}${BOOT_DIR}/vmlinuz ip=dhcp inst.stage2=${SERVER_PROTOCOL}://${SERVER_IPv4}${SERVER_BASE_PATH}${BOOT_DIR}/stage2.img loglevel=3 inst.sshd
+initrd ${SERVER_PROTOCOL}://${SERVER_IPv4}${SERVER_BASE_PATH}${BOOT_DIR}/initrd.img
 echo Starting kernel (don't forget to stream Short n' Sweet while installing [good luck doing that])
 boot
 EOF
@@ -90,7 +90,7 @@ cat > $BOOT_DIR_IRL/menu.pipxe <<EOF
 item fedora Fedora $FEDORA_VERSION (Installer)
 goto continue-fedora
 :fedora
-chain ${SERVER_PROTOCOL}://${SERVER_IPv4}${SERVER_BASE_PATH}/boot/fedora/boot.ipxe
+chain ${SERVER_PROTOCOL}://${SERVER_IPv4}${SERVER_BASE_PATH}${BOOT_DIR}/boot.ipxe
 boot
 goto menu
 :continue-fedora
