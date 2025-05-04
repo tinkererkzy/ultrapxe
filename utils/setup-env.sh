@@ -3,10 +3,13 @@
 # Create config directory if it doesn't exist
 CONFIG_DIR="$(dirname "$0")/../config"
 
-# Detect base directory (two levels up from the script)
+# Detect base directory (one levels up from the script)
 BASE_DIR="$(realpath "$(dirname "$0")/../")"
 
 # Prompt for configuration
+read -p "Enter the protocol for the file server (HTTP/NFS): " FILE_SERVER_PROTOCOL
+FILE_SERVER_PROTOCOL=${FILE_SERVER_PROTOCOL:-http}
+
 read -p "Enter IP address of the server that serves this repo: " FILE_SERVER_IP
 FILE_SERVER_IP=${FILE_SERVER_IP:-192.168.1.3}
 
@@ -23,9 +26,10 @@ cat > "$CONFIG_DIR/env.conf" << EOF
 BASE_DIR=$BASE_DIR
 
 # File Server Configuration
-SERVER_PROTOCOL=nfs 
+SERVER_PROTOCOL=$FILE_SERVER_PROTOCOL
 SERVER_IPv4=$FILE_SERVER_IP
 SERVER_BASE_PATH=$FILE_BASE_PATH
 EOF
+
 
 echo "Environment configuration file created at $CONFIG_DIR/env.conf"
